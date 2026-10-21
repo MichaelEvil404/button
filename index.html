@@ -1,110 +1,792 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Movie Night</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DongHuaFan Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { padauk: ['Padauk', 'sans-serif'] },
+          colors: {
+            cultDark: '#0B0F19',
+            cultSurface: '#161F30',
+            cultCard: '#1E293B',
+            cultGold: '#F59E0B',
+            cultCyan: '#06B6D4',
+            cultRed: '#EF4444'
+          }
         }
-        .card {
-            width: 100%;
-            max-width: 360px;
-            background: var(--tg-theme-secondary-bg-color, #f4f4f5);
-            border-radius: 16px;
-            padding: 20px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .header { font-size: 14px; color: #8e8e93; margin-bottom: 4px; }
-        .title { font-size: 18px; font-weight: 700; margin: 0 0 16px 0; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn {
-            background: var(--tg-theme-button-color, #0088cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            padding: 12px 8px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-        .btn:active { opacity: 0.8; transform: scale(0.98); }
-        .full-btn { grid-column: span 2; }
-        .reset-btn {
-            background: transparent;
-            color: #8e8e93;
-            border: 1px solid #d1d1d6;
-            margin-top: 10px;
-        }
-    </style>
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Padauk', sans-serif;
+      background-color: #0B0F19;
+      color: #E2E8F0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .gold-gradient {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+    .gold-border {
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+  </style>
 </head>
-<body>
+<body class="flex flex-col h-screen overflow-hidden">
 
-<div class="card" id="app">
-    <div class="header" id="step-tag">Question 1 of 3</div>
-    <div class="title" id="question">What are you in the mood for?</div>
-    <div class="grid" id="btn-group">
-        <button class="btn" onclick="selectGenre('Adventure')">🏕️ Adventure</button>
-        <button class="btn" onclick="selectGenre('Comedy')">😂 Comedy</button>
-        <button class="btn" onclick="selectGenre('Thriller')">🔍 Thriller</button>
-        <button class="btn" onclick="selectGenre('Documentary')">📜 Documentary</button>
+  <!-- Top App Bar -->
+  <header class="bg-cultSurface px-4 py-3 border-b border-slate-800 flex items-center justify-between z-10 shrink-0">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-slate-950 font-bold text-sm shadow-md">
+        東
+      </div>
+      <div>
+        <h1 class="text-sm font-bold tracking-wide text-amber-400">DongHuaFan</h1>
+        <p class="text-[10px] text-cyan-400" id="user-qi-realm">🌱 ချီစုဆောင်းခြင်းအဆင့်</p>
+      </div>
     </div>
-</div>
+    <div class="flex items-center space-x-2">
+      <div class="flex items-center bg-slate-900/80 px-2.5 py-1 rounded-full border border-amber-500/30">
+        <i class="fa-solid fa-bolt text-amber-400 text-xs mr-1.5"></i>
+        <span class="text-xs font-bold text-amber-300" id="header-points">0</span>
+      </div>
+      <div class="flex items-center bg-slate-900/80 px-2 py-1 rounded-full border border-orange-500/30">
+        <span class="text-xs" id="header-streak-icon">🔥</span>
+        <span class="text-xs font-bold text-orange-400 ml-1" id="header-streak">1</span>
+      </div>
+    </div>
+  </header>
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+  <!-- Main Scrollable Area -->
+  <main class="flex-1 overflow-y-auto hide-scrollbar pb-24" id="content-container">
 
-    let state = {};
+    <!-- HOME TAB -->
+    <section id="tab-home" class="p-4 space-y-5">
+      <!-- MOTD Banner -->
+      <div id="motd-card" class="relative rounded-2xl overflow-hidden shadow-xl border border-amber-500/20 bg-cultCard">
+        <img id="motd-img" src="https://telegra.ph/file/40d4a974b2161cebc0bd8.jpg" class="w-full h-44 object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-cultDark via-slate-950/60 to-transparent flex flex-col justify-end p-4">
+          <span class="bg-amber-500 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full w-max mb-1">🌟 ယနေ့ကား (MOTD)</span>
+          <h2 id="motd-title" class="text-base font-bold text-white drop-shadow">RENEGADE IMMORTAL</h2>
+          <div class="flex items-center space-x-3 text-xs text-slate-300 mt-1">
+            <span class="text-amber-400 font-bold"><i class="fa-solid fa-star mr-1"></i>9.8/10</span>
+            <span>•</span>
+            <span class="text-cyan-400">🔄 Ongoing</span>
+            <span>•</span>
+            <span>Ep 80+</span>
+          </div>
+          <button onclick="openMovieDetail(1)" class="mt-2.5 gold-gradient text-slate-950 text-xs font-bold py-1.5 px-4 rounded-xl shadow active:scale-95 transition-all text-center">
+            <i class="fa-solid fa-play mr-1.5"></i>ယခု ကြည့်မည်
+          </button>
+        </div>
+      </div>
 
-    function selectGenre(genre) {
-        state.genre = genre;
-        document.getElementById('step-tag').innerText = "Question 2 of 3";
-        document.getElementById('question').innerText = "How much time do you have?";
-        document.getElementById('btn-group').innerHTML = `
-            <button class="btn full-btn" onclick="selectDuration('Under 90 min')">⏱️ Under 90 min</button>
-            <button class="btn full-btn" onclick="selectDuration('Around 2 hours')">⏳ Around 2 hours</button>
-            <button class="btn full-btn" onclick="selectDuration('Make it an epic')">🌟 Make it an epic</button>
-            <button class="btn full-btn reset-btn" onclick="location.reload()">🔄 Reset</button>
-        `;
+      <!-- Quick Action Row -->
+      <div class="grid grid-cols-4 gap-2">
+        <button onclick="switchTab('quiz')" class="bg-cultSurface p-2.5 rounded-xl border border-slate-800 flex flex-col items-center text-center space-y-1 active:scale-95 transition">
+          <i class="fa-solid fa-brain text-cyan-400 text-lg"></i>
+          <span class="text-[11px] text-slate-300">Daily Quiz</span>
+        </button>
+        <button onclick="switchTab('ranks')" class="bg-cultSurface p-2.5 rounded-xl border border-slate-800 flex flex-col items-center text-center space-y-1 active:scale-95 transition">
+          <i class="fa-solid fa-trophy text-amber-400 text-lg"></i>
+          <span class="text-[11px] text-slate-300">အမှတ်ဇယား</span>
+        </button>
+        <button onclick="claimDailyBonus()" class="bg-cultSurface p-2.5 rounded-xl border border-slate-800 flex flex-col items-center text-center space-y-1 active:scale-95 transition">
+          <i class="fa-solid fa-gift text-red-400 text-lg"></i>
+          <span class="text-[11px] text-slate-300">Daily Bonus</span>
+        </button>
+        <button onclick="switchTab('collections')" class="bg-cultSurface p-2.5 rounded-xl border border-slate-800 flex flex-col items-center text-center space-y-1 active:scale-95 transition">
+          <i class="fa-solid fa-folder-open text-purple-400 text-lg"></i>
+          <span class="text-[11px] text-slate-300">Collections</span>
+        </button>
+      </div>
+
+      <!-- Continue Watching (Ep Marker) -->
+      <div id="continue-section" class="hidden">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-slate-200"><i class="fa-solid fa-clock-rotate-left mr-1.5 text-cyan-400"></i>ဆက်ကြည့်ရန်</h3>
+        </div>
+        <div id="continue-cards" class="flex space-x-3 overflow-x-auto hide-scrollbar pb-1"></div>
+      </div>
+
+      <!-- Trending Section -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-bold text-slate-200"><i class="fa-solid fa-fire mr-1.5 text-orange-400"></i>လူကြိုက်များသောကားများ</h3>
+          <span class="text-[11px] text-amber-400 cursor-pointer" onclick="switchTab('search')">အားလုံးကြည့်</span>
+        </div>
+        <div id="trending-list" class="grid grid-cols-2 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- SEARCH TAB -->
+    <section id="tab-search" class="p-4 space-y-4 hidden">
+      <!-- Search Input -->
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
+        <input type="text" id="search-input" oninput="handleSearch()" placeholder="ကားနာမည် ရိုက်ရှာပါ..." 
+               class="w-full bg-cultSurface border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
+      </div>
+
+      <!-- Genre Tag Filters -->
+      <div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1 text-xs" id="genre-chips">
+        <button onclick="filterGenre('all')" class="genre-btn px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold shrink-0">အားလုံး</button>
+        <button onclick="filterGenre('Action')" class="genre-btn px-3 py-1 rounded-full bg-cultSurface border border-slate-800 text-slate-300 shrink-0">Action</button>
+        <button onclick="filterGenre('Cultivation')" class="genre-btn px-3 py-1 rounded-full bg-cultSurface border border-slate-800 text-slate-300 shrink-0">Cultivation</button>
+        <button onclick="filterGenre('Fantasy')" class="genre-btn px-3 py-1 rounded-full bg-cultSurface border border-slate-800 text-slate-300 shrink-0">Fantasy</button>
+        <button onclick="filterGenre('Romance')" class="genre-btn px-3 py-1 rounded-full bg-cultSurface border border-slate-800 text-slate-300 shrink-0">Romance</button>
+      </div>
+
+      <!-- Movie Cards Grid -->
+      <div id="search-results" class="grid grid-cols-2 gap-3"></div>
+    </section>
+
+    <!-- QUIZ TAB -->
+    <section id="tab-quiz" class="p-4 space-y-4 hidden">
+      <div class="bg-cultSurface rounded-2xl p-4 border border-slate-800 text-center">
+        <i class="fa-solid fa-brain text-cyan-400 text-3xl mb-2"></i>
+        <h2 class="text-base font-bold text-white">Daily Quiz မေးခွန်း</h2>
+        <p class="text-xs text-slate-400 mt-1">မေးခွန်းမှန်ကန်စွာဖြေဆိုပြီး <span class="text-amber-400 font-bold">+15 Points</span> ရယူပါ</p>
+      </div>
+
+      <div id="quiz-box" class="bg-cultCard p-4 rounded-2xl border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between text-xs text-slate-400">
+          <span>ယနေ့ Quiz</span>
+          <span class="text-amber-400 font-bold">+15 pts</span>
+        </div>
+        <p id="quiz-question" class="text-sm font-bold text-slate-100">Renegade Immortal (ဝမ်လင်း) ၏ အစောပိုင်း အဓိက အမွေအနှစ်မှာ အဘယ်နည်း။</p>
+        
+        <div id="quiz-options" class="space-y-2 pt-2">
+          <!-- Quiz Options rendered via JS -->
+        </div>
+
+        <div id="quiz-status" class="hidden text-xs text-center p-2 rounded-xl"></div>
+      </div>
+
+      <!-- Streak Rewards Milestone -->
+      <div class="bg-cultSurface p-4 rounded-2xl border border-slate-800 space-y-3">
+        <h3 class="text-xs font-bold text-slate-300"><i class="fa-solid fa-fire text-orange-500 mr-1.5"></i>Streak ဆုလာဘ်များ</h3>
+        <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+          <div class="p-2 bg-slate-900 rounded-xl border border-slate-800">
+            <p class="text-orange-400 font-bold">၇ ရက်</p>
+            <p class="text-slate-400">+50 pts</p>
+          </div>
+          <div class="p-2 bg-slate-900 rounded-xl border border-slate-800">
+            <p class="text-orange-400 font-bold">၃၀ ရက်</p>
+            <p class="text-slate-400">+300 pts</p>
+          </div>
+          <div class="p-2 bg-slate-900 rounded-xl border border-slate-800">
+            <p class="text-orange-400 font-bold">၁၀၀ ရက်</p>
+            <p class="text-slate-400">+1000 pts</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RANKS & CHALLENGES TAB -->
+    <section id="tab-ranks" class="p-4 space-y-4 hidden">
+      <!-- Challenge Progress -->
+      <div class="bg-cultSurface p-4 rounded-2xl border border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold text-amber-400"><i class="fa-solid fa-flag-checkered mr-1.5"></i>Weekly Challenge</h3>
+          <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">+200 pts</span>
+        </div>
+        <p class="text-xs text-slate-300 font-bold mb-1">ဤပတ်တွင် ကား (၃) ကား အပြည့်အစုံ ကြည့်ရှုပါ</p>
+        <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden mt-2">
+          <div class="bg-amber-400 h-full rounded-full" style="width: 66%;"></div>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1.5 text-right">၂ / ၃ ပြီးစီး</p>
+      </div>
+
+      <!-- Leaderboard Segment -->
+      <div class="space-y-2">
+        <h3 class="text-xs font-bold text-slate-300 mb-2"><i class="fa-solid fa-crown text-amber-400 mr-1.5"></i>ထိပ်တန်း ကျင့်ကြံသူများ</h3>
+        <div id="leaderboard-list" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- COLLECTIONS TAB -->
+    <section id="tab-collections" class="p-4 space-y-4 hidden">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-bold text-slate-200">My Collections</h2>
+        <button onclick="createNewCollection()" class="text-xs bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-full shadow">
+          + အသစ်ဆောက်မည်
+        </button>
+      </div>
+      <div id="collections-container" class="space-y-2.5"></div>
+    </section>
+
+    <!-- PROFILE TAB -->
+    <section id="tab-profile" class="p-4 space-y-4 hidden">
+      <!-- Profile Card -->
+      <div class="bg-cultSurface p-4 rounded-2xl border border-slate-800 flex items-center space-x-3">
+        <div class="w-14 h-14 rounded-full gold-gradient p-0.5 shadow-lg">
+          <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center text-amber-400 text-xl font-bold" id="profile-avatar">
+            U
+          </div>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-sm font-bold text-white" id="profile-name">Cultivator</h2>
+          <p class="text-xs text-cyan-400" id="profile-realm">🌱 ချီစုဆောင်းခြင်းအဆင့်</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Points: <span class="text-amber-400 font-bold" id="profile-pts">0</span></p>
+        </div>
+      </div>
+
+      <!-- Referral Link Box -->
+      <div class="bg-cultCard p-3.5 rounded-2xl border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-300 font-bold"><i class="fa-solid fa-users text-cyan-400 mr-1.5"></i>မိတ်ဆွေဖိတ်ခေါ်ရန်</span>
+          <span class="text-amber-400 text-[10px] font-bold">+50 pts / ဦး</span>
+        </div>
+        <div class="flex items-center bg-slate-900 rounded-xl p-2 border border-slate-800">
+          <input type="text" id="ref-link" readonly value="https://t.me/DongHuaFanBot?start=ref_USER123" class="bg-transparent text-[11px] text-slate-300 w-full focus:outline-none">
+          <button onclick="copyRefLink()" class="ml-2 bg-amber-500 text-slate-950 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0">Copy</button>
+        </div>
+      </div>
+
+      <!-- Badges Showcase -->
+      <div class="bg-cultSurface p-4 rounded-2xl border border-slate-800 space-y-3">
+        <h3 class="text-xs font-bold text-slate-300"><i class="fa-solid fa-medal text-amber-400 mr-1.5"></i>ရရှိပြီးသော Badges</h3>
+        <div class="grid grid-cols-4 gap-2 text-center text-xs" id="badges-grid">
+          <div class="bg-slate-900 p-2 rounded-xl border border-amber-500/30 flex flex-col items-center">
+            <span class="text-lg">🔍</span>
+            <span class="text-[10px] text-slate-300 mt-1">ပထမရှာဖွေမှု</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-xl border border-amber-500/30 flex flex-col items-center">
+            <span class="text-lg">🔥</span>
+            <span class="text-[10px] text-slate-300 mt-1">Streak ၇ ရက်</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 opacity-40 flex flex-col items-center">
+            <span class="text-lg">💎</span>
+            <span class="text-[10px] text-slate-400 mt-1">ကား ၁၀၀</span>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-xl border border-slate-800 opacity-40 flex flex-col items-center">
+            <span class="text-lg">👑</span>
+            <span class="text-[10px] text-slate-400 mt-1">နတ်ဘုရား</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MOVIE DETAIL MODAL -->
+  <div id="movie-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex flex-col justify-end">
+    <div class="bg-cultSurface rounded-t-3xl border-t border-slate-800 max-h-[88vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="relative">
+        <img id="modal-poster" class="w-full h-44 object-cover opacity-60">
+        <button onclick="closeModal()" class="absolute top-4 right-4 bg-slate-900/80 w-8 h-8 rounded-full flex items-center justify-center text-slate-300 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="absolute bottom-3 left-4 right-4">
+          <h2 id="modal-title" class="text-base font-bold text-white drop-shadow">Title</h2>
+          <p id="modal-genre" class="text-xs text-amber-400">Action, Fantasy</p>
+        </div>
+      </div>
+
+      <!-- Modal Body Scroll -->
+      <div class="p-4 overflow-y-auto space-y-4 flex-1">
+        <!-- Actions (Fav, Coll, Share) -->
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="toggleFavorite()" id="modal-fav-btn" class="bg-cultCard p-2 rounded-xl border border-slate-800 text-xs flex items-center justify-center space-x-1.5 active:scale-95">
+            <i class="fa-regular fa-heart text-red-400"></i>
+            <span>သိမ်းမည်</span>
+          </button>
+          <button onclick="promptAddToCollection()" class="bg-cultCard p-2 rounded-xl border border-slate-800 text-xs flex items-center justify-center space-x-1.5 active:scale-95">
+            <i class="fa-solid fa-folder-plus text-purple-400"></i>
+            <span>Folder</span>
+          </button>
+          <button onclick="shareMovie()" class="bg-cultCard p-2 rounded-xl border border-slate-800 text-xs flex items-center justify-center space-x-1.5 active:scale-95">
+            <i class="fa-solid fa-share-nodes text-cyan-400"></i>
+            <span>မျှဝေမည်</span>
+          </button>
+        </div>
+
+        <!-- Synopsis -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-300 mb-1">ဇာတ်လမ်းအကျဉ်း</h4>
+          <p id="modal-synopsis" class="text-xs text-slate-400 leading-relaxed"></p>
+        </div>
+
+        <!-- Episodes List -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-300 mb-2">အပိုင်းများ (Episodes)</h4>
+          <div id="modal-episodes" class="grid grid-cols-4 gap-2"></div>
+        </div>
+
+        <!-- Rating 1-10 Section -->
+        <div class="bg-cultCard p-3 rounded-2xl border border-slate-800">
+          <h4 class="text-xs font-bold text-slate-300 mb-2 text-center">⭐ Rating ပေးရန် (၁ - ၁၀)</h4>
+          <div class="flex justify-between" id="rating-stars">
+            <!-- 1 to 10 rating buttons -->
+          </div>
+        </div>
+
+        <!-- Community Reviews -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-300 mb-2">Reviews</h4>
+          <div class="flex space-x-2 mb-3">
+            <input type="text" id="review-input" placeholder="ထင်မြင်ချက် ရေးပါ..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+            <button onclick="submitReview()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs">တင်မည်</button>
+          </div>
+          <div id="modal-reviews-list" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-cultSurface border-t border-slate-800 px-4 py-2 flex justify-between items-center z-40">
+    <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center text-amber-400" data-tab="home">
+      <i class="fa-solid fa-house text-base"></i>
+      <span class="text-[10px] mt-1 font-bold">ပင်မ</span>
+    </button>
+    <button onclick="switchTab('search')" class="nav-btn flex flex-col items-center text-slate-400" data-tab="search">
+      <i class="fa-solid fa-magnifying-glass text-base"></i>
+      <span class="text-[10px] mt-1">ရှာဖွေရန်</span>
+    </button>
+    <button onclick="switchTab('quiz')" class="nav-btn flex flex-col items-center text-slate-400" data-tab="quiz">
+      <i class="fa-solid fa-brain text-base"></i>
+      <span class="text-[10px] mt-1">Quiz</span>
+    </button>
+    <button onclick="switchTab('ranks')" class="nav-btn flex flex-col items-center text-slate-400" data-tab="ranks">
+      <i class="fa-solid fa-trophy text-base"></i>
+      <span class="text-[10px] mt-1">အဆင့်</span>
+    </button>
+    <button onclick="switchTab('profile')" class="nav-btn flex flex-col items-center text-slate-400" data-tab="profile">
+      <i class="fa-solid fa-user text-base"></i>
+      <span class="text-[10px] mt-1">ကျွန်ုပ်</span>
+    </button>
+  </nav>
+
+  <!-- Client-side Logic Script -->
+  <script>
+    // Init Telegram Web App SDK
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
     }
 
-    function selectDuration(time) {
-        state.time = time;
-        document.getElementById('step-tag').innerText = "Question 3 of 3";
-        document.getElementById('question').innerText = "Who are you watching with?";
-        document.getElementById('btn-group').innerHTML = `
-            <button class="btn" onclick="showResult('Just me')">👤 Just me</button>
-            <button class="btn" onclick="showResult('Date night')">🍷 Date night</button>
-            <button class="btn full-btn" onclick="showResult('Friends')">👥 Friends</button>
-            <button class="btn full-btn reset-btn" onclick="location.reload()">🔄 Reset</button>
-        `;
+    // Mock Donghua Database
+    const MOVIES = [
+      {
+        id: 1,
+        title: "Renegade Immortal (仙逆)",
+        poster: "https://telegra.ph/file/40d4a974b2161cebc0bd8.jpg",
+        genre: "Action, Cultivation",
+        rating: 9.8,
+        ratingCount: 1540,
+        status: "Ongoing",
+        schedule: "Monday",
+        synopsis: "ဝမ်လင်း (Wang Lin) ၏ သာမန်ရွာသားဘဝမှ ကျင့်ကြံခြင်းလောကသို့ ခြေချကာ ကောင်းကင်ဘုံကို ဆန့်ကျင်ပြီး အမတတစ်ပါးဖြစ်လာရန် လျှောက်လှမ်းခဲ့သော ခရီးစဉ်။",
+        episodes: [80, 81, 82, 83, 84, 85],
+        link: "https://t.me/DongHuaFan"
+      },
+      {
+        id: 2,
+        title: "Record of a Mortal's Journey to Immortality",
+        poster: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&auto=format&fit=crop&q=60",
+        genre: "Cultivation, Fantasy",
+        rating: 9.7,
+        ratingCount: 1820,
+        status: "Ongoing",
+        schedule: "Saturday",
+        synopsis: "ဟန်လီ (Han Li) ၏ သတိကြီးစွာဖြင့် ခြေလှမ်းတိုင်းကို လျှောက်လှမ်းပြီး အမတလောကသို့ ပျံတက်သွားပုံကို ရိုက်ကူးထားသည့် လက်ရာကောင်း။",
+        episodes: [110, 111, 112, 113, 114],
+        link: "https://t.me/DongHuaFan"
+      },
+      {
+        id: 3,
+        title: "Battle Through the Heavens (斗破苍穹)",
+        poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop&q=60",
+        genre: "Action, Romance",
+        rating: 9.5,
+        ratingCount: 2100,
+        status: "Ongoing",
+        schedule: "Sunday",
+        synopsis: "ရှောင်ယန် (Xiao Yan) ၏ ကျဆင်းသွားသော ပါရမီမှ မီးတောက်ပေါင်းစုံကို စုဆောင်းကာ အထွတ်အထိပ်သို့ ပြန်လည်တက်လှမ်းခြင်း။",
+        episodes: [102, 103, 104, 105],
+        link: "https://t.me/DongHuaFan"
+      },
+      {
+        id: 4,
+        title: "Swallowed Star (吞噬星空)",
+        poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=60",
+        genre: "Sci-Fi, Action",
+        rating: 9.6,
+        ratingCount: 1340,
+        status: "Ongoing",
+        schedule: "Wednesday",
+        synopsis: "လော့ဖုန်း (Luo Feng) ၏ ကမ္ဘာပျက်ကပ်ဘေးအလွန် စကြဝဠာအဆင့် ကျင့်ကြံတိုက်ခိုက်သူဖြစ်လာပုံ။",
+        episodes: [135, 136, 137, 138],
+        link: "https://t.me/DongHuaFan"
+      }
+    ];
+
+    // Local State
+    let userState = {
+      points: parseInt(localStorage.getItem('dhf_points') || '45'),
+      streak: parseInt(localStorage.getItem('dhf_streak') || '3'),
+      lastBonus: localStorage.getItem('dhf_last_bonus') || '',
+      history: JSON.parse(localStorage.getItem('dhf_history') || '{"1": 84}'),
+      favorites: JSON.parse(localStorage.getItem('dhf_favorites') || '[1]'),
+      collections: JSON.parse(localStorage.getItem('dhf_collections') || '["အကြိုက်ဆုံး Action", "ကြည့်ရန်စာရင်း"]'),
+      reviews: JSON.parse(localStorage.getItem('dhf_reviews') || '{"1": [{"name": "Cultivator-9", "text": "ဝမ်လင်းဇာတ်ကားကတော့ အမြဲရှယ်ပဲ!"}]}')
+    };
+
+    let activeMovie = null;
+
+    // Qi Cultivation Realm helper
+    function getQiRealm(pts) {
+      if (pts < 20) return "🌱 ချီစုဆောင်းခြင်းအဆင့်";
+      if (pts < 50) return "🔩 အခြေခံ တည်ဆောက်ခြင်းအဆင့်";
+      if (pts < 150) return "💎 ရွှေအမြုတေ အဆင့်";
+      if (pts < 350) return "👻 ဝိညာဉ် ဖြစ်တည်မှုအဆင့်";
+      if (pts < 800) return "⚡ နတ်ဘုရားအဆင့် (Divine)";
+      return "🌌 ဖန်ဆင်းရှင်အဆင့် (Creator)";
     }
 
-    function showResult(withWhom) {
-        document.getElementById('step-tag').innerText = "🎉 Your Match Found!";
-        document.getElementById('question').innerText = "Movie Match: The Odyssey 🍿";
-        document.getElementById('btn-group').innerHTML = `
-            <p style="grid-column: span 2; font-size:14px; margin: 4px 0 12px 0;">
-                Epic, visually spectacular and best watched on the biggest screen you can find.<br><br>
-                ✨ <b>96% match</b> (${state.genre} • ${state.time})
-            </p>
-            <button class="btn full-btn" onclick="window.open('https://youtube.com', '_blank')">🍿 Watch Trailer ↗️</button>
-            <button class="btn full-btn reset-btn" onclick="location.reload()">🔄 Try Again</button>
-        `;
+    function updateUIHeader() {
+      document.getElementById('header-points').innerText = userState.points;
+      document.getElementById('header-streak').innerText = userState.streak;
+      document.getElementById('profile-pts').innerText = userState.points;
+      const realm = getQiRealm(userState.points);
+      document.getElementById('user-qi-realm').innerText = realm;
+      document.getElementById('profile-realm').innerText = realm;
     }
-</script>
 
+    // Tab Navigation
+    function switchTab(tabId) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.tab === tabId) {
+          btn.classList.add('text-amber-400');
+          btn.classList.remove('text-slate-400');
+        } else {
+          btn.classList.remove('text-amber-400');
+          btn.classList.add('text-slate-400');
+        }
+      });
+    }
+
+    // Render Trending Movies
+    function renderTrending() {
+      const container = document.getElementById('trending-list');
+      container.innerHTML = MOVIES.map(m => `
+        <div onclick="openMovieDetail(${m.id})" class="bg-cultSurface rounded-2xl overflow-hidden border border-slate-800 active:scale-95 transition flex flex-col justify-between">
+          <div class="relative h-32 w-full">
+            <img src="${m.poster}" class="w-full h-full object-cover">
+            <span class="absolute top-2 right-2 bg-slate-900/80 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold">
+              ⭐ ${m.rating}
+            </span>
+          </div>
+          <div class="p-2.5">
+            <h4 class="text-xs font-bold text-white truncate">${m.title}</h4>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1">
+              <span>${m.status}</span>
+              <span class="text-cyan-400 font-bold">ကြည့်မည် ▶</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Continue Watching Cards
+    function renderContinueWatching() {
+      const contSection = document.getElementById('continue-section');
+      const contCards = document.getElementById('continue-cards');
+      const keys = Object.keys(userState.history);
+
+      if (keys.length === 0) {
+        contSection.classList.add('hidden');
+        return;
+      }
+      contSection.classList.remove('hidden');
+      contCards.innerHTML = keys.map(k => {
+        const movie = MOVIES.find(m => m.id === parseInt(k));
+        if (!movie) return '';
+        const ep = userState.history[k];
+        return `
+          <div onclick="openMovieDetail(${movie.id})" class="bg-cultSurface rounded-xl p-2 border border-slate-800 flex items-center space-x-2 shrink-0 w-52 active:scale-95 transition">
+            <img src="${movie.poster}" class="w-10 h-10 rounded-lg object-cover">
+            <div class="truncate flex-1">
+              <p class="text-xs font-bold text-white truncate">${movie.title}</p>
+              <p class="text-[10px] text-amber-400">📍 Ep ${ep} အထိ ကြည့်ပြီး</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Search Handler
+    function handleSearch() {
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const results = MOVIES.filter(m => m.title.toLowerCase().includes(q) || m.genre.toLowerCase().includes(q));
+      renderSearchResults(results);
+    }
+
+    function filterGenre(genre) {
+      document.querySelectorAll('.genre-btn').forEach(b => {
+        b.className = "genre-btn px-3 py-1 rounded-full bg-cultSurface border border-slate-800 text-slate-300 shrink-0";
+      });
+      event.target.className = "genre-btn px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-bold shrink-0";
+
+      if (genre === 'all') {
+        renderSearchResults(MOVIES);
+      } else {
+        const filtered = MOVIES.filter(m => m.genre.includes(genre));
+        renderSearchResults(filtered);
+      }
+    }
+
+    function renderSearchResults(list) {
+      const container = document.getElementById('search-results');
+      if (list.length === 0) {
+        container.innerHTML = `<p class="col-span-2 text-center text-xs text-slate-500 py-8">ဇာတ်ကား မတွေ့ပါ...</p>`;
+        return;
+      }
+      container.innerHTML = list.map(m => `
+        <div onclick="openMovieDetail(${m.id})" class="bg-cultSurface rounded-2xl overflow-hidden border border-slate-800 active:scale-95 transition">
+          <div class="relative h-28 w-full">
+            <img src="${m.poster}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-2">
+            <h4 class="text-xs font-bold text-white truncate">${m.title}</h4>
+            <p class="text-[10px] text-slate-400">${m.genre}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Quiz System
+    const QUIZ_DATA = {
+      question: "Renegade Immortal (ဝမ်လင်း) ၏ အစောပိုင်း အဓိက အမွေအနှစ်မှာ အဘယ်နည်း။",
+      options: ["Heaven Defying Bead (ကောင်းကင်ဆန့်ကျင် ပုတီး)", "God Refining Cauldron", "Ancient God Body", "Seven Colored Sword"],
+      answer: 0,
+      points: 15
+    };
+
+    function initQuiz() {
+      document.getElementById('quiz-question').innerText = QUIZ_DATA.question;
+      const opts = document.getElementById('quiz-options');
+      opts.innerHTML = QUIZ_DATA.options.map((opt, i) => `
+        <button onclick="answerQuiz(${i})" class="quiz-btn w-full text-left p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 hover:border-amber-500 active:scale-98 transition flex items-center">
+          <span class="w-5 h-5 rounded-full bg-slate-800 text-amber-400 flex items-center justify-center text-[10px] mr-2">${String.fromCharCode(65+i)}</span>
+          ${opt}
+        </button>
+      `).join('');
+    }
+
+    function answerQuiz(index) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      const statusBox = document.getElementById('quiz-status');
+      statusBox.classList.remove('hidden');
+
+      if (index === QUIZ_DATA.answer) {
+        statusBox.className = "text-xs text-center p-2 rounded-xl bg-emerald-500/10 border border-emerald-500 text-emerald-400 font-bold";
+        statusBox.innerText = `✅ မှန်ကန်ပါသည်! +${QUIZ_DATA.points} Points ရရှိပါပြီ!`;
+        userState.points += QUIZ_DATA.points;
+        localStorage.setItem('dhf_points', userState.points);
+        updateUIHeader();
+      } else {
+        statusBox.className = "text-xs text-center p-2 rounded-xl bg-red-500/10 border border-red-500 text-red-400 font-bold";
+        statusBox.innerText = "❌ မှားယွင်းနေပါသည်။ မနက်ဖြန် ထပ်ကြိုးစားပါ!";
+      }
+
+      document.querySelectorAll('.quiz-btn').forEach(btn => btn.disabled = true);
+    }
+
+    // Daily Bonus
+    function claimDailyBonus() {
+      const today = new Date().toISOString().slice(0, 10);
+      if (userState.lastBonus === today) {
+        if (tg) tg.showAlert("✅ ယနေ့အတွက် Daily Bonus ထုတ်ယူပြီးပါပြီ!");
+        else alert("✅ ယနေ့အတွက် Daily Bonus ထုတ်ယူပြီးပါပြီ!");
+        return;
+      }
+      userState.points += 10;
+      userState.lastBonus = today;
+      localStorage.setItem('dhf_points', userState.points);
+      localStorage.setItem('dhf_last_bonus', today);
+      updateUIHeader();
+      if (tg) tg.showAlert("🎁 Daily Bonus +10 Points ရရှိပါပြီ!");
+      else alert("🎁 Daily Bonus +10 Points ရရှိပါပြီ!");
+    }
+
+    // Modal Control & Episodes
+    function openMovieDetail(id) {
+      activeMovie = MOVIES.find(m => m.id === id);
+      if (!activeMovie) return;
+
+      document.getElementById('modal-poster').src = activeMovie.poster;
+      document.getElementById('modal-title').innerText = activeMovie.title;
+      document.getElementById('modal-genre').innerText = activeMovie.genre;
+      document.getElementById('modal-synopsis').innerText = activeMovie.synopsis;
+
+      // Render Episodes
+      const epContainer = document.getElementById('modal-episodes');
+      epContainer.innerHTML = activeMovie.episodes.map(ep => `
+        <button onclick="watchEpisode(${ep})" class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-amber-400 hover:bg-amber-500 hover:text-slate-950 transition active:scale-95">
+          Ep ${ep}
+        </button>
+      `).join('');
+
+      // Render 1-10 rating stars
+      const starBox = document.getElementById('rating-stars');
+      starBox.innerHTML = [1,2,3,4,5,6,7,8,9,10].map(n => `
+        <button onclick="rateMovie(${n})" class="text-[11px] font-bold text-slate-400 hover:text-amber-400 p-1">${n}</button>
+      `).join('');
+
+      // Reviews
+      renderReviews();
+
+      document.getElementById('movie-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('movie-modal').classList.add('hidden');
+    }
+
+    function watchEpisode(ep) {
+      userState.history[activeMovie.id] = ep;
+      userState.points += 1;
+      localStorage.setItem('dhf_history', JSON.stringify(userState.history));
+      localStorage.setItem('dhf_points', userState.points);
+      updateUIHeader();
+      renderContinueWatching();
+
+      if (tg) {
+        tg.openTelegramLink(activeMovie.link);
+      } else {
+        window.open(activeMovie.link, '_blank');
+      }
+    }
+
+    function rateMovie(score) {
+      if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+      userState.points += 2;
+      localStorage.setItem('dhf_points', userState.points);
+      updateUIHeader();
+      if (tg) tg.showAlert(`⭐ ${score}/10 Rating ပေးပြီးပါပြီ! (+2 pts)`);
+      else alert(`⭐ ${score}/10 Rating ပေးပြီးပါပြီ! (+2 pts)`);
+    }
+
+    function renderReviews() {
+      const container = document.getElementById('modal-reviews-list');
+      const list = userState.reviews[activeMovie.id] || [];
+      if (list.length === 0) {
+        container.innerHTML = `<p class="text-slate-500">Review မရှိသေးပါ...</p>`;
+        return;
+      }
+      container.innerHTML = list.map(r => `
+        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+          <p class="font-bold text-amber-400">${r.name}</p>
+          <p class="text-slate-300 mt-0.5">${r.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function submitReview() {
+      const input = document.getElementById('review-input');
+      const txt = input.value.trim();
+      if (!txt) return;
+
+      if (!userState.reviews[activeMovie.id]) userState.reviews[activeMovie.id] = [];
+      userState.reviews[activeMovie.id].unshift({
+        name: tg?.initDataUnsafe?.user?.first_name || "ငါကောလိပ်ကျောင်းသား",
+        text: txt
+      });
+
+      localStorage.setItem('dhf_reviews', JSON.stringify(userState.reviews));
+      input.value = '';
+      renderReviews();
+    }
+
+    function toggleFavorite() {
+      const idx = userState.favorites.indexOf(activeMovie.id);
+      if (idx > -1) {
+        userState.favorites.splice(idx, 1);
+        if (tg) tg.showAlert("ဖျက်ပြီးပါပြီ");
+      } else {
+        userState.favorites.push(activeMovie.id);
+        if (tg) tg.showAlert("❤️ Favorites ထဲ သိမ်းဆည်းပြီးပါပြီ!");
+      }
+      localStorage.setItem('dhf_favorites', JSON.stringify(userState.favorites));
+    }
+
+    function copyRefLink() {
+      const copyText = document.getElementById("ref-link");
+      copyText.select();
+      document.execCommand("copy");
+      if (tg) tg.showAlert("📋 Referral Link ကူးယူပြီးပါပြီ!");
+      else alert("📋 Referral Link ကူးယူပြီးပါပြီ!");
+    }
+
+    function renderLeaderboard() {
+      const board = [
+        { name: "Cultivator Wang", pts: 2150, rank: "🥇" },
+        { name: "Han Li 77", pts: 1840, rank: "🥈" },
+        { name: "Xiao Flame", pts: 1420, rank: "🥉" },
+        { name: "Lin Fan", pts: 980, rank: "4" }
+      ];
+      document.getElementById('leaderboard-list').innerHTML = board.map(b => `
+        <div class="flex items-center justify-between p-2.5 bg-cultSurface rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 text-center font-bold text-amber-400">${b.rank}</span>
+            <span class="text-white font-bold">${b.name}</span>
+          </div>
+          <span class="text-amber-400 font-bold">${b.pts} pts</span>
+        </div>
+      `).join('');
+    }
+
+    function renderCollections() {
+      document.getElementById('collections-container').innerHTML = userState.collections.map(c => `
+        <div class="p-3 bg-cultSurface rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-folder text-purple-400"></i>
+            <span class="font-bold text-white">${c}</span>
+          </div>
+          <span class="text-[10px] text-slate-400">2 ကား</span>
+        </div>
+      `).join('');
+    }
+
+    // App Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      // Sync user info from Telegram if available
+      if (tg?.initDataUnsafe?.user) {
+        const u = tg.initDataUnsafe.user;
+        document.getElementById('profile-name').innerText = u.first_name || "Cultivator";
+        document.getElementById('profile-avatar').innerText = (u.first_name || "U")[0];
+        document.getElementById('ref-link').value = `https://t.me/DongHuaFanBot?start=ref_${u.id}`;
+      }
+
+      updateUIHeader();
+      renderTrending();
+      renderContinueWatching();
+      renderSearchResults(MOVIES);
+      initQuiz();
+      renderLeaderboard();
+      renderCollections();
+    });
+  </script>
 </body>
 </html>
